@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QORA-TTS Web - Text-to-Speech</title>
+  <meta name="description" content="Kostenloses Text-to-Speech Web Interface basierend auf QORA-TTS">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #ffffff;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      padding: 40px 0;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 36px;
+      box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: #a0a0a0;
+      font-size: 16px;
+    }
+
+    /* Main Card */
+    .main-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #c0c0c0;
+    }
+
+    textarea {
+      width: 100%;
+      height: 180px;
+      padding: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      font-size: 16px;
+      resize: vertical;
+      background: rgba(0, 0, 0, 0.2);
+      color: #ffffff;
+      transition: border-color 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    textarea::placeholder {
+      color: #606060;
+    }
+
+    .char-counter {
+      text-align: right;
+      font-size: 12px;
+      color: #808080;
+      margin-top: 4px;
+    }
+
+    .char-counter.warning {
+      color: #ff6b6b;
+    }
+
+    /* Controls */
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 2fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      font-size: 16px;
+      background: rgba(0, 0, 0, 0.2);
+      color: #ffffff;
+      cursor: pointer;
+      transition: border-color 0.3s ease;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    select option {
+      background: #1a1a2e;
+      color: #ffffff;
+    }
+
+    /* Speed Control */
+    .speed-control {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .speed-value {
+      text-align: center;
+      font-size: 14px;
+      color: #667eea;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Button */
+    .btn-primary {
+      width: 100%;
+      padding: 16px 32px;
+      font-size: 18px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #ffffff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Status */
+    .status {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.success {
+      background: rgba(46, 213, 115, 0.2);
+      color: #2ed573;
+      border: 1px solid rgba(46, 213, 115, 0.3);
+    }
+
+    .status.error {
+      background: rgba(255, 107, 107, 0.2);
+      color: #ff6b6b;
+      border: 1px solid rgba(255, 107, 107, 0.3);
+    }
+
+    .status.info {
+      background: rgba(102, 126, 234, 0.2);
+      color: #667eea;
+      border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+
+    /* Audio Player */
+    .audio-section {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .audio-section.show {
+      display: block;
+    }
+
+    audio {
+      width: 100%;
+      margin-bottom: 16px;
+      border-radius: 12px;
+    }
+
+    .audio-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      background: transparent;
+      color: #ffffff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-secondary:hover {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    /* Info Section */
+    .info-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 30px;
+    }
+
+    .info-card {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .info-card h3 {
+      font-size: 14px;
+      color: #a0a0a0;
+      margin-bottom: 8px;
+    }
+
+    .info-card p {
+      font-size: 24px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 30px 0;
+      color: #606060;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo">🎙️</div>
+      <h1>QORA-TTS Web</h1>
+      <p class="subtitle">Text-to-Speech Interface mit AI</p>
+    </header>
+
+    <!-- Main Card -->
+    <div class="main-card">
+      <!-- Text Input -->
+      <div class="form-group">
+        <label for="text">Text zum Sprechen (max. 1024 Zeichen)</label>
+        <textarea
+          id="text"
+          placeholder="Geben Sie hier Ihren Text ein, der in Sprache umgewandelt werden soll..."
+          maxlength="1100"
+        >Hallo! Willkommen bei QORA-TTS Web. Dies ist eine Demonstration der Text-to-Speech Funktionalität.</textarea>
+        <div class="char-counter" id="charCounter">0 / 1024</div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <div class="form-group">
+          <label for="voice">Stimme</label>
+          <select id="voice">
+            <option value="tongtong">Tongtong (♀)</option>
+            <option value="chuichui">Chuichui (♀)</option>
+            <option value="xiaochen">Xiaochen (♂)</option>
+            <option value="jam">Jam (♂)</option>
+            <option value="kazi">Kazi (⚥)</option>
+            <option value="douji">Douji (⚥)</option>
+            <option value="luodo">Luodo (⚥)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="speed">Geschwindigkeit</label>
+          <div class="speed-control">
+            <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.0">
+            <div class="speed-value" id="speedValue">1.0x</div>
+          </div>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: flex-end;">
+          <button class="btn-primary" id="generateBtn" onclick="generateSpeech()">
+            <span id="btnIcon">🔊</span>
+            <span id="btnText">Sprechen</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="status" id="status"></div>
+
+      <!-- Audio Section -->
+      <div class="audio-section" id="audioSection">
+        <audio id="audioPlayer" controls></audio>
+        <div class="audio-actions">
+          <button class="btn-secondary" onclick="downloadAudio()">
+            💾 Herunterladen
+          </button>
+          <button class="btn-secondary" onclick="stopAudio()">
+            ⏹️ Stoppen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="info-section">
+      <div class="info-card">
+        <h3>Verfügbare Stimmen</h3>
+        <p>7+</p>
+      </div>
+      <div class="info-card">
+        <h3>Max. Textlänge</h3>
+        <p>1024</p>
+      </div>
+      <div class="info-card">
+        <h3>Geschwindigkeit</h3>
+        <p>0.5x - 2.0x</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>
+        Powered by <a href="https://huggingface.co/qoranet/QORA-TTS" target="_blank">QORA-TTS</a>
+        • Apache 2.0 License
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    // ============================================
+    // WICHTIG: Ändern Sie diese URL zu Ihrem Backend!
+    // ============================================
+    const API_URL = 'https://your-backend.onrender.com/api/tts';
+
+    // DOM Elements
+    const textInput = document.getElementById('text');
+    const charCounter = document.getElementById('charCounter');
+    const speedSlider = document.getElementById('speed');
+    const speedValue = document.getElementById('speedValue');
+    const generateBtn = document.getElementById('generateBtn');
+    const btnIcon = document.getElementById('btnIcon');
+    const btnText = document.getElementById('btnText');
+    const statusDiv = document.getElementById('status');
+    const audioSection = document.getElementById('audioSection');
+    const audioPlayer = document.getElementById('audioPlayer');
+
+    // Character Counter
+    textInput.addEventListener('input', updateCharCounter);
+
+    function updateCharCounter() {
+      const count = textInput.value.length;
+      const max = 1024;
+      charCounter.textContent = `${count} / ${max}`;
+
+      if (count > max) {
+        charCounter.classList.add('warning');
+      } else {
+        charCounter.classList.remove('warning');
+      }
+    }
+
+    // Speed Slider
+    speedSlider.addEventListener('input', () => {
+      speedValue.textContent = `${parseFloat(speedSlider.value).toFixed(1)}x`;
+    });
+
+    // Generate Speech
+    async function generateSpeech() {
+      const text = textInput.value.trim();
+      const voice = document.getElementById('voice').value;
+      const speed = parseFloat(speedSlider.value);
+
+      // Validation
+      if (!text) {
+        showStatus('Bitte geben Sie Text ein!', 'error');
+        return;
+      }
+
+      if (text.length > 1024) {
+        showStatus('Text ist zu lang! Maximum ist 1024 Zeichen.', 'error');
+        return;
+      }
+
+      // Start loading
+      setLoading(true);
+      showStatus('Generiere Audio...', 'info');
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, voice, speed })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Server-Fehler');
+        }
+
+        // Get audio blob
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        // Update audio player
+        audioPlayer.src = url;
+        audioPlayer.play();
+
+        // Show audio section
+        audioSection.classList.add('show');
+        showStatus('✅ Audio erfolgreich generiert!', 'success');
+
+      } catch (error) {
+        console.error('TTS Error:', error);
+        showStatus(`❌ Fehler: ${error.message}`, 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Download Audio
+    function downloadAudio() {
+      if (audioPlayer.src) {
+        const a = document.createElement('a');
+        a.href = audioPlayer.src;
+        a.download = `tts-${Date.now()}.wav`;
+        a.click();
+      }
+    }
+
+    // Stop Audio
+    function stopAudio() {
+      audioPlayer.pause();
+      audioPlayer.currentTime = 0;
+    }
+
+    // Show Status
+    function showStatus(message, type) {
+      statusDiv.textContent = message;
+      statusDiv.className = `status show ${type}`;
+    }
+
+    // Set Loading State
+    function setLoading(loading) {
+      generateBtn.disabled = loading;
+      if (loading) {
+        btnIcon.innerHTML = '<div class="spinner"></div>';
+        btnText.textContent = 'Generiere...';
+      } else {
+        btnIcon.textContent = '🔊';
+        btnText.textContent = 'Sprechen';
+      }
+    }
+
+    // Initialize
+    updateCharCounter();
+  </script>
+</body>
+</html>
