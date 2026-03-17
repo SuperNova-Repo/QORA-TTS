@@ -15,16 +15,16 @@ Diese Anleitung zeigt Ihnen, wie Sie QORA-TTS mit InfinityFree nutzen können.
 
 ```
 ┌─────────────────────────┐
-│   Infinityfree.com                   │
-│   (HTML/CSS/JS)                    │
-│   Statisches Frontend                │
+│   InfinityFree          │
+│   (HTML/CSS/JS)         │
+│   Statisches Frontend   │
 └───────────┬─────────────┘
             │ HTTP API
             ▼
 ┌─────────────────────────┐
-│   Backend-Service                   │
-│   (Render/Fly.io/etc.).               │
-│   Node.js + QORA-TTS.             │
+│   Backend-Service       │
+│   (Render/Fly.io/etc.)  │
+│   Node.js + QORA-TTS    │
 └─────────────────────────┘
 ```
 
